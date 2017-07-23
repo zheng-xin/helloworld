@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:p="http://www.springframework.org/schema/p" xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:tool="http://www.springframework.org/schema/tool"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cache="http://www.springframework.org/schema/cache"  
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/tx
+     http://www.springframework.org/schema/tx/spring-tx.xsd
+     http://www.springframework.org/schema/aop
+     http://www.springframework.org/schema/aop/spring-aop.xsd
+     http://www.springframework.org/schema/jee
+     http://www.springframework.org/schema/jee/spring-jee.xsd
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context.xsd
+     http://www.springframework.org/schema/util
+     http://www.springframework.org/schema/util/spring-util.xsd
+     http://www.springframework.org/schema/tool
+     http://www.springframework.org/schema/tool/spring-tool.xsd
+     http://www.springframework.org/schema/cache 
+     http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
+	<description>Spring公共配置 </description>
+	<context:property-placeholder ignore-unresolvable="true" location="classpath:application.properties" />
+	<context:component-scan base-package="com.*.entity,com.*.dao,com.*.service" >
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan> 
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"> 
+	    <property name="driverClassName" value="${jdbc.driver}" /> 
+	    <property name="url" value="${jdbc.url}" /> 
+	    <property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis/mybatis-config.xml" />
+		<property name="mapperLocations" value="classpath*:mybatis/mapper/**/*.xml" />
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.*.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	</bean>
+	<!-- 項目自定义Realm -->
+	<bean id="shiroDbRealm" class="com.user.shiro.Realm" />
+	<!-- Shiro's main business-tier object for web-enabled applications -->
+	
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="shiroDbRealm" />
+		<property name="cacheManager" ref="shiroCacheManager" />
+	</bean>
+	<!-- <bean id="topicconsumer2" class="com.jms.topicconsumer2"></bean> -->
+	
+	<!-- Shiro Filter -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		 <!-- <property name="loginUrl" value="/login.do" />
+		<property name="successUrl" value="/index.do" />
+		<property name="unauthorizedUrl" value="/login.do" /> -->
+		<property name="filterChainDefinitions"> 
+		    <value>
+		   <!--  /login.do = anon -->			
+		    /*.do = authc	
+			</value>
+		</property>
+	</bean>
+	<!-- shiro内置的缓存 -->
+	 <bean id="shiroCacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager" /> 
+	
+	<!-- 使用redis实现去选等缓存 -->
+	<!-- <bean id="shiroCacheManager" class="org.crazycake.shiro.RedisCacheManager">
+    	<property name="redisManager" ref="redisManager" />
+	</bean>
+	<bean id="redisManager" class="org.crazycake.shiro.RedisManager">
+	    <property name="host" value="127.0.0.1"/>
+	    <property name="port" value="6379"/>
+	    <property name="expire" value="1800"/>
+	</bean> -->
+	
+	<!-- 使用encache缓存shiro权限信息 -->  
+  <!-- 	<bean id="shiroCacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">  
+        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>  
+	</bean>  -->
+	
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+	
+	<!-- spring encache缓存 -->
+	<!-- 启用缓存注解功能(请将其配置在Spring主配置文件中) -->  
+    <cache:annotation-driven cache-manager="cacheManager"/>  
+	<bean id="cacheManagerFactory" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">  
+        <property name="configLocation" value="classpath:ehcache.xml"/>  
+    </bean>  
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">  
+        <property name="cacheManager" ref="cacheManagerFactory"/>  
+    </bean>
+	
+	
+	<!-- 事务管理器 -->
+   <bean id="transactionManager"
+         class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+         <property name="dataSource" ref="dataSource"></property>
+     </bean> 
+
+	<!-- 使用annotation定义事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" /> 
+	<!-- <bean id="aaa" class="com.redisListhener.tomcatlistenser" /> -->
+</beans>

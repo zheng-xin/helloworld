@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "mybatis-3-mapper.dtd" >
+<mapper namespace="com.user.dao.UserDao" >
+  <resultMap id="BaseResultMap" type="com.user.entity.user" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="passwd" property="pwd" jdbcType="VARCHAR" />
+  </resultMap>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="com.user.entity.user" >
+   SELECT * from user where id=#{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectByUserName" resultMap="BaseResultMap" parameterType="com.user.entity.user" >
+   SELECT * from user where name=#{name,jdbcType=VARCHAR}
+  </select>
+  <insert id="add" parameterType="com.user.entity.user" >
+    insert into user (id, name, passwd)
+    values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR})
+  </insert>
+  <update id="updatename" parameterType="java.lang.String" >
+    UPDATE `user` set `name`=#{name,jdbcType=VARCHAR} where id=2
+  </update>
+</mapper>
